@@ -3,33 +3,30 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy import stats
 from statsmodels.tsa.stattools import coint, adfuller
-from constants import *
-import functools
+import logging
+
+# create logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Statistics_Cointegration:
     def __init__(self, arr1: np.ndarray, arr2: np.ndarray) -> None:
         self.arr1 = arr1
         self.arr2 = arr2
-        self.model = sm.OLS(self.arr1, self.arr2).fit()
 
-    @functools.cache
+        try:
+            self.model = sm.OLS(self.arr1, self.arr2).fit()
+            self.hedge_ratio = self.calculate_hedge_ratio()
+            self.spread = self.calculate_spread()
+        except Exception as e:
+            logger.error(f"Error in model fitting: {e}")
+
     def calculate_hedge_ratio(self) -> float:
         return self.model.params[0]
 
-    @property
-    @functools.cache
-    def hedge_ratio(self) -> float:
-        return self.calculate_hedge_ratio()
-
-    @functools.cache
     def calculate_spread(self) -> np.ndarray:
         return self.arr1 - self.hedge_ratio * self.arr2
-
-    @property
-    @functools.cache
-    def spread(self) -> np.ndarray:
-        return self.calculate_spread()
 
     def calculate_correlation(self) -> float:
         return np.corrcoef(self.arr1, self.arr2)[0, 1]
@@ -43,16 +40,21 @@ class Statistics_Cointegration:
         return adf_result[1] < threshold
 
     def calculate_half_life(self) -> float:
-        if np.any(pd.isnull(self.spread)):
-            spread_lag = pd.Series(self.spread).shift(
-                1).fillna(method='bfill').values
-        else:
-            spread_lag = np.roll(self.spread, 1)
+        spread_lag = np.roll(self.spread, 1)
+        spread_lag[0] = self.spread[1]  # Backfill first value
+
         spread_ret = self.spread - spread_lag
         spread_lag2 = sm.add_constant(spread_lag)
-        model = sm.OLS(spread_ret, spread_lag2)
-        res = model.fit()
-        return -np.log(2) / res.params[1]
+
+        try:
+            model = sm.OLS(spread_ret, spread_lag2)
+            res = model.fit()
+            half_life = -np.log(2) / res.params[1]
+        except Exception as e:
+            logger.error(f"Error in half-life calculation: {e}")
+            half_life = None
+
+        return half_life
 
     def calculate_zscore(self) -> np.ndarray:
         return stats.zscore(self.spread)

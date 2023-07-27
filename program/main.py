@@ -4,6 +4,7 @@ from constants import *
 from func_connections import connect_mt5
 from func_storage_cointegration import store_cointegration_results
 from func_public import get_time
+from func_entry_pairs import open_positions
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +43,7 @@ if __name__ == "__main__":
             # Place trades for opening positions
             if PLACE_TRADES:
                 logging.info("Finding trading opportunities...")
-                # open_positions(client)
+                open_positions()
 
             # Configurable delay, tune this as per your requirements.
             time.sleep(10)

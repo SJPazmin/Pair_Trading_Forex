@@ -34,7 +34,7 @@ def store_cointegration_results():
         statistics = Statistics_Cointegration(arr1, arr2)
 
         # If pair is highly correlated, cointegrated, and has a half-life less than or equal to 35
-        if statistics.calculate_correlation() > 0.7 and statistics.check_cointegration() and statistics.calculate_half_life() <= MAX_HALF_LIFE:
+        if statistics.calculate_correlation() > CORRELATION_THRESHOLD and not statistics.check_cointegration() and statistics.calculate_half_life() <= MAX_HALF_LIFE:
             # Add to the list of cointegrated pairs
             cointegrated_pairs.append(pair)
 
