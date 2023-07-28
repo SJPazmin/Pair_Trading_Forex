@@ -5,6 +5,7 @@ from func_connections import connect_mt5
 from func_storage_cointegration import store_cointegration_results
 from func_public import get_time
 from func_entry_pairs import open_positions
+from func_exit_pairs import close_positions
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -38,7 +39,7 @@ if __name__ == "__main__":
             # Place trades for opening positions
             if MANAGE_EXITS:
                 logging.info("Managing exits...")
-                # manage_trade_exits(client)
+                close_positions()
 
             # Place trades for opening positions
             if PLACE_TRADES:
